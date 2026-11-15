@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import pool from '../db/index.js';
+import Note from '../models/Note.js';
+import { validateId } from '../middleware/validateId.js';
+import { getPagination, buildMeta } from '../utils/pagination.js';
 
 const router = Router();
 
@@ -28,15 +31,6 @@ function validate(data, partial = false) {
   return errors;
 }
 
-const validateId = (req, res, next) => {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id < 1) {
-    return res.status(400).json({ error: 'id must be a positive integer' });
-  }
-  req.id = id;
-  next();
-};
-
 // GET /api/applications/stats   (/:id se PEHLE)
 router.get('/stats', async (req, res) => {
   const { rows } = await pool.query(
@@ -48,20 +42,32 @@ router.get('/stats', async (req, res) => {
   res.json(rows);
 });
 
-// GET /api/applications   (optional: ?status=Interview)
+// GET /api/applications?status=Applied&page=1&limit=10
 router.get('/', async (req, res) => {
   const { status } = req.query;
-  let sql = `SELECT ${COLUMNS} FROM applications`;
-  const params = [];
+  const { page, limit, offset } = getPagination(req.query);
 
+  const params = [];
+  let whereSql = '';
   if (status) {
     params.push(status);
-    sql += ` WHERE status = $1`;
+    whereSql = `WHERE status = $${params.length}`;
   }
-  sql += ' ORDER BY id';
 
-  const { rows } = await pool.query(sql, params);
-  res.json(rows);
+  const countResult = await pool.query(
+    `SELECT COUNT(*)::int AS total FROM applications ${whereSql}`,
+    params
+  );
+  const total = countResult.rows[0].total;
+
+  const { rows } = await pool.query(
+    `SELECT ${COLUMNS} FROM applications ${whereSql}
+     ORDER BY id
+     LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    [...params, limit, offset]
+  );
+
+  res.json({ data: rows, pagination: buildMeta(page, limit, total) });
 });
 
 // GET /api/applications/:id
@@ -172,6 +178,9 @@ router.delete('/:id', validateId, async (req, res) => {
   if (rowCount === 0) {
     return res.status(404).json({ error: 'Application not found' });
   }
+
+  await Note.deleteMany({ applicationId: req.id });
+
   res.status(204).send();
 });
 

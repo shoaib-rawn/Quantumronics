@@ -1,0 +1,37 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f5f6fa;
+  color: #222;
+}
+
+.container { max-width: 640px; margin: 0 auto; padding: 24px 16px; }
+
+.list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.card h2 { margin: 0 0 4px; font-size: 1.1rem; }
+.card p { margin: 0 0 4px; }
+
+.badge { padding: 4px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+.badge-applied { background: #dbeafe; color: #1e40af; }
+.badge-interview { background: #fef3c7; color: #92400e; }
+.badge-offer { background: #dcfce7; color: #166534; }
+.badge-rejected { background: #fee2e2; color: #991b1b; }
+
+.error { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; }
+
+.pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 20px; }
+.pagination button { padding: 8px 16px; cursor: pointer; }
+.pagination button:disabled { opacity: 0.5; cursor: not-allowed; }

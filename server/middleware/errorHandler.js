@@ -18,6 +18,18 @@ export const errorHandler = (err, req, res, next) => {
     const { status, message } = PG_ERRORS[err.code];
     return res.status(status).json({ error: message });
   }
+    if (err.name === 'ValidationError') {
+    const errors = Object.values(err.errors).map((e) => e.message);
+    return res.status(400).json({ errors });
+  }
+
+  if (err.name === 'CastError') {
+    return res.status(400).json({ error: `Invalid value for ${err.path}` });
+  }
+
+  if (err.code === 11000) {
+    return res.status(409).json({ error: 'Duplicate value' });
+  }
 
   const status = err.status || 500;
   const message = status === 500 ? 'Internal Server Error' : err.message;
